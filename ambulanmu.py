@@ -25,7 +25,7 @@
 import logging
 import os
 
-from geojson import Point, Feature, FeatureCollection, dump
+from geojson import Point, Feature, FeatureCollection, dump,load
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, ParseMode
 from telegram.ext import (
 	Updater, 
@@ -174,8 +174,7 @@ def info_ambulanmu(update:Update, context:CallbackContext):
 		selectedProv = update.callback_query.data
 	else:
 		prov= selectedProv
-		
-		
+				
 	kota = abm.listKota(prov)
 	ListKota = kota
 	
@@ -299,7 +298,7 @@ def location(update: Update, context: CallbackContext):
 	#simpan data {user, lokasi=(lon,lat), tujuan,waktu}
 	trackingLog(driver,tujuan,lokasi,update.message.date)
 	toGeoJson(last_id,user.first_name,live_update.longitude, live_update.latitude,'awal',update.message.date)
-	writeGeoJson(features)
+	#writeGeoJson(features)
 	update.message.reply_text(text,reply_markup = markup)
 	
 	context.user_data[START_OVER] = True
@@ -342,7 +341,7 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 def getUpdateLoc(update: Update,context:CallbackContext):
 	#print(update)
-	global features
+	#global features
 	updateId = update.update_id
 	currData = update.edited_message
 	if currData :
@@ -351,24 +350,41 @@ def getUpdateLoc(update: Update,context:CallbackContext):
 		lat = currData.location.latitude
 		nm = currData.from_user
 		toGeoJson(updateId,nm.first_name, lon,lat,'latest',tgl)
-		writeGeoJson(features)
+		#writeGeoJson(features)
 		
 	
 def toGeoJson(uid,nm,lon,lat,state,waktu):
-	global features
+	toDir = "data"
+	file_name = "ambulan.geojson"
+	toData = os.path.join(toDir,file_name)
 	point = Point((lon,lat))
 	waktu = str(waktu)
-	#myfeat = Feature(geometry=point,properties={"upid":uid,"driver":nm,"longitude":lon,"latitude":lat,"waktu":waktu,"state":state})
-	#features.append(Feature(geometry=point,properties={"upid":uid,"driver":nm,"longitude":lon,"latitude":lat,"waktu":waktu,"state":state}))
-	features.insert(0,Feature(geometry=point,properties={"upid":uid,"driver":nm,"longitude":lon,"latitude":lat,"waktu":waktu,"state":state}))
-	#writeGeoJson(features)
+	fg = Feature(geometry=point,properties={"upid":uid,"driver":nm,"longitude":lon,"latitude":lat,"waktu":waktu,"state":state})
+	features =[]
+	#check if file exist
+	if(os.path.isfile(toData)):
+		#extract features
+		#append fg to features
+		mygeo = load(open(toData))
+		features = mygeo.features
+		features.append(fg)
+		writeGeoJson(features)
+	else:
+		#create features list
+		#write geojson
+		features.append(fg)
+		writeGeoJson(features)
 	
 def writeGeoJson(features):
-	feature_collection = FeatureCollection(features)
-	with open("ambulan.geojson","w") as f:
-		dump(feature_collection,f)
-
+	toDir = "data"
+	file_name = "ambulan.geojson"
+	toData = os.path.join(toDir,file_name)
 	
+	feature_collection = FeatureCollection(features)
+	#print(feature_collection)
+	with open(toData,"w") as f:
+		dump(feature_collection,f)
+		
 
 def main():
 	updater = Updater("{}".format(TOKEN), use_context=True)
