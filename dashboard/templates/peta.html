@@ -17,7 +17,7 @@
         <style>
             #map {
                 position: absolute;
-                height: 100%;
+                height: 92%;
                 width:100%;
                 right:0;
                 left:0;
@@ -26,7 +26,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container">
+<div class="container-fluid">
 <div id="map">
 </div>
 </div>
@@ -37,7 +37,30 @@
 <script>
             // set up map
             var center = [-1.328499, 121.589203];
-            var url = "data/ambulan.geojson"
+            var url = "data/ambulan.geojson";   //{{url_for('data_source',filename='ambulan.geojson')}};
+            //
+            
+            //watermark logo
+            L.Control.Support = L.Control.extend({
+					onAdd: function(map){
+						var img = L.DomUtil.create('img');
+						img.src ='https://github.com/azhargiri/mit-logo/raw/master/logo_mit_300.png';
+						img.style.width ='52px';
+						img.title ='mitsociety.id';
+						return img;						
+					},
+					
+					onRemove: function(map){
+					}
+			})
+			
+			L.control.support = function(opts){
+					return new L.Control.Support(opts)
+				}
+			//icon
+			
+			
+			
             
             function createRealtimeLayer(url) {
 				return L.realtime(url, {
@@ -46,6 +69,16 @@
 						return f.properties.upid;
 					},
 					cache: true,
+					
+					pointToLayer: function(f,latlng){
+						var ambulanIcon = L.icon({
+											iconSize: [18, 20],
+											iconAnchor: [13, 27],
+											popupAnchor:  [1, -24],
+											iconUrl: 'static/icons/' + f.properties.state + '.png'
+						});
+						return L.marker(latlng,{icon:ambulanIcon});
+					},
 					
 					onEachFeature(f, l) {
 						l.bindPopup(function() {
@@ -59,11 +92,13 @@
 			}
 			
 			var map = L.map('map').setView(center, 6);
+			
 			var ambulan = createRealtimeLayer(url);
 			ambulan.addTo(map)
 			ambulan.once('update', function() {
                                 map.fitBounds(ambulan.getBounds(), {maxZoom:8});
                         });
+            L.control.support({position:'bottomleft'}).addTo(map); 
 
             // Stamen's Toner basemap
             L.tileLayer(
@@ -75,5 +110,6 @@
                         'OpenStreetMap</a>, under' +
                         '<a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
             }).addTo(map);
+            
         </script>
 {% endblock %}

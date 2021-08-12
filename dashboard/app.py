@@ -21,9 +21,9 @@
 #  MA 02110-1301, USA.
 #  
 #  
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 
-app = Flask(__name__ , static_folder="../data" )
+app = Flask(__name__ ) #, static_folder="../data" )
 
 @app.route('/')
 def index():
@@ -37,6 +37,9 @@ def about():
 def peta():
 	return render_template('peta.html')
 
+@app.route('/data/<path:filename>')
+def data_source(filename):
+	return send_from_directory('../data',filename)
 
 if __name__ == '__main__':
 	app.run(debug=True)
