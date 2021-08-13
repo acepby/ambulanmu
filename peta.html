@@ -31,33 +31,138 @@
         <script>
             // set up map
             var center = [-1.328499, 121.589203];
-            var url = "ambulan.geojson"
+            var url = "data/ambulan.geojson";   //{{url_for('data_source',filename='ambulan.geojson')}};
+			//oneachfeature
+			var olddriver = null;
+			var polys = [[]];
+			var markers = [[]];
+			
+			//https://stackoverflow.com/a/48167596
+			
+			function onEachFeature(feature, layer) {
+				if(feature.properties.mid && olddriver != feature.properties.mid){
+					olddriver = feature.properties.mid;
+					polys[olddriver]=[];
+					
+					var lastlatlng = [];
+										
+					//This block gets the last latlng from the line before. so you have one line.
+					// If you  want to seperate the lines by color, deleted this block
+					if( polys[olddriver].length > 0){
+						var lastpoly = polys[olddriver][polys[olddriver].length-1];
+							if(lastpoly.getLatLngs() && lastpoly.getLatLngs().length > 0){
+								var lastlatlngs = lastpoly.getLatLngs();
+								lastlatlng = lastlatlngs[0][lastlatlngs[0].length-1];
+							}
+					}
+					//End of block
+					
+					
+					polys[olddriver].push(L.polyline([lastlatlng],{color: "red"}).addTo(map));					
+				}
+
+				var poly = polys[olddriver][polys[olddriver].length-1]; //get last line
+				//console.log(poly);
+				
+				poly.addLatLng(layer.getLatLng());
+				layer.bindPopup(function() {
+							return '<h3>' + feature.properties.driver + '</h3>' +
+								'<p>' + feature.properties.state +'</p>' +
+								'<b>'+ feature.properties.upid +'</b>'+
+								'<p>' + new Date(feature.properties.waktu);
+						});
+				
+			}
+            
+            //
+            /*
+            function point2layer(feature,latlng){
+					var ambulanIcon = L.icon({
+											iconSize: [18, 20],
+											iconAnchor: [13, 27],
+											popupAnchor:  [1, -24],
+											iconUrl: 'static/icons/' + feature.properties.state + '.png'
+						});
+						console.log(feature.properties.state);
+						
+					if(feature.properties.driver && olddriver != feature.properties.driver){
+						olddriver = feature.properties.driver;
+						markers[olddriver]=[];
+						console.log(markers);
+						markers[olddriver].push(L.marker(latlng,{icon:ambulanIcon}).addTo(map));					
+					}
+					
+					var marker = markers[olddriver][markers[oldriver].lenght -1];
+					console.log(marker);
+					
+					
+				}
+				*/
+            
+            //watermark logo
+            L.Control.Support = L.Control.extend({
+					onAdd: function(map){
+						var img = L.DomUtil.create('img');
+						img.src ='https://github.com/azhargiri/mit-logo/raw/master/logo_mit_300.png';
+						img.style.width ='52px';
+						img.title ='mitsociety.id';
+						return img;						
+					},
+					
+					onRemove: function(map){
+					}
+			})
+			
+			L.control.support = function(opts){
+					return new L.Control.Support(opts)
+				}
+			//icon
+			
+			
             
             function createRealtimeLayer(url) {
 				return L.realtime(url, {
-					interval: 60 * 1000,
+					interval: 10 * 1000,
 					getFeatureId: function(f) {
-						return f.properties.driver;
+						return f.properties.upid;
 					},
 					cache: true,
+					//poinToLayer:point2layer,
 					
-					onEachFeature(f, l) {
-						l.bindPopup(function() {
-							return '<h3>' + f.properties.driver + '</h3>' +
-								'<p>' + f.properties.state +'</p>' +
-								'<b>'+ f.properties.upid +'</b>'+
-								'<p>' + new Date(f.properties.waktu);
+					pointToLayer: function(f,latlng){
+						//console.log(latlng);
+						var oldsopir = null;
+						var test = [[]];
+						var ambulanIcon = L.icon({
+											iconSize: [18, 20],
+											iconAnchor: [13, 27],
+											popupAnchor:  [1, -24],
+											iconUrl: 'dashboard/templates/static/icons/' + f.properties.state + '.png'
 						});
-					}
+						
+						if (f.properties.driver && oldsopir != f.properties.driver){
+							test[oldsopir]=[];
+							test[oldsopir].push(L.marker(latlng,{icon:ambulanIcon}).addTo(map));
+						}
+						//test[f.properties.driver]=[]													
+						//console.log(test[oldsopir][0]);						
+						//return L.marker(latlng,{icon:ambulanIcon});
+						return test[oldsopir][0];
+					}, 					
+									
+					onEachFeature: onEachFeature
 				});
 			}
 			
 			var map = L.map('map').setView(center, 6);
 			var ambulan = createRealtimeLayer(url);
 			ambulan.addTo(map)
+								
 			ambulan.once('update', function() {
-                                map.fitBounds(ambulan.getBounds(), {maxZoom:8});
+                                map.fitBounds(ambulan.getBounds(), {maxZoom:20});
                         });
+            
+            L.control.support({position:'bottomleft'}).addTo(map); 
 
             // Stamen's Toner basemap
             L.tileLayer(

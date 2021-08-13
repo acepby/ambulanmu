@@ -45,10 +45,12 @@
 			var olddriver = null;
 			var polys = [[]];
 			var markers = [[]];
-
+			
+			//https://stackoverflow.com/a/48167596
+			
 			function onEachFeature(feature, layer) {
-				if(feature.properties.driver && olddriver != feature.properties.driver){
-					olddriver = feature.properties.driver;
+				if(feature.properties.mid && olddriver != feature.properties.mid){
+					olddriver = feature.properties.mid;
 					polys[olddriver]=[];
 					
 					var lastlatlng = [];
@@ -124,11 +126,10 @@
 			//icon
 			
 			
-			
             
             function createRealtimeLayer(url) {
 				return L.realtime(url, {
-					interval: 60 * 1000,
+					interval: 10 * 1000,
 					getFeatureId: function(f) {
 						return f.properties.upid;
 					},
@@ -136,25 +137,26 @@
 					//poinToLayer:point2layer,
 					
 					pointToLayer: function(f,latlng){
+						//console.log(latlng);
+						var oldsopir = null;
+						var test = [[]];
 						var ambulanIcon = L.icon({
 											iconSize: [18, 20],
 											iconAnchor: [13, 27],
 											popupAnchor:  [1, -24],
 											iconUrl: 'static/icons/' + f.properties.state + '.png'
 						});
-						return L.marker(latlng,{icon:ambulanIcon});
-					},
-					
-										
-					/*
-					onEachFeature(f, l) {
-						l.bindPopup(function() {
-							return '<h3>' + f.properties.driver + '</h3>' +
-								'<p>' + f.properties.state +'</p>' +
-								'<b>'+ f.properties.upid +'</b>'+
-								'<p>' + new Date(f.properties.waktu);
-						});
-					}*/
+						
+						if (f.properties.driver && oldsopir != f.properties.driver){
+							test[oldsopir]=[];
+							test[oldsopir].push(L.marker(latlng,{icon:ambulanIcon}).addTo(map));
+						}
+						//test[f.properties.driver]=[]													
+						//console.log(test[oldsopir][0]);						
+						//return L.marker(latlng,{icon:ambulanIcon});
+						return test[oldsopir][0];
+					}, 					
+									
 					onEachFeature: onEachFeature
 				});
 			}
@@ -164,7 +166,7 @@
 			ambulan.addTo(map)
 								
 			ambulan.once('update', function() {
-                                map.fitBounds(ambulan.getBounds(), {maxZoom:8});
+                                map.fitBounds(ambulan.getBounds(), {maxZoom:20});
                         });
             
             L.control.support({position:'bottomleft'}).addTo(map); 

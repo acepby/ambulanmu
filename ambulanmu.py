@@ -285,6 +285,7 @@ def location(update: Update, context: CallbackContext):
 	markup = InlineKeyboardMarkup(keyboard)
 	last_id = update.update_id
 	user = update.message.chat
+	mid =update.message.message_id
 	driver ={}
 	driver['id'] = user.id
 	driver['username'] = user.username
@@ -297,7 +298,7 @@ def location(update: Update, context: CallbackContext):
 	lokasi = "({},{})".format(live_update.longitude, live_update.latitude)
 	#simpan data {user, lokasi=(lon,lat), tujuan,waktu}
 	trackingLog(driver,tujuan,lokasi,update.message.date)
-	toGeoJson(last_id,user.first_name,live_update.longitude, live_update.latitude,'awal',update.message.date)
+	toGeoJson(last_id,mid,user.first_name,live_update.longitude, live_update.latitude,'awal',update.message.date)
 	#writeGeoJson(features)
 	update.message.reply_text(text,reply_markup = markup)
 	
@@ -340,7 +341,7 @@ def cancel(update: Update, context: CallbackContext) -> int:
 	return ConversationHandler.END
 
 def getUpdateLoc(update: Update,context:CallbackContext):
-	#print(update)
+	print(update)
 	#global features
 	updateId = update.update_id
 	currData = update.edited_message
@@ -349,17 +350,18 @@ def getUpdateLoc(update: Update,context:CallbackContext):
 		lon = currData.location.longitude
 		lat = currData.location.latitude
 		nm = currData.from_user
-		toGeoJson(updateId,nm.first_name, lon,lat,'latest',tgl)
+		mid = currData.message_id
+		toGeoJson(updateId,mid,nm.first_name, lon,lat,'latest',tgl)
 		#writeGeoJson(features)
 		
 	
-def toGeoJson(uid,nm,lon,lat,state,waktu):
+def toGeoJson(uid,mid,nm,lon,lat,state,waktu):
 	toDir = "data"
 	file_name = "ambulan.geojson"
 	toData = os.path.join(toDir,file_name)
 	point = Point((lon,lat))
 	waktu = str(waktu)
-	fg = Feature(geometry=point,properties={"upid":uid,"driver":nm,"longitude":lon,"latitude":lat,"waktu":waktu,"state":state})
+	fg = Feature(geometry=point,properties={"upid":uid,"mid":mid,"driver":nm,"longitude":lon,"latitude":lat,"waktu":waktu,"state":state})
 	features =[]
 	#check if file exist
 	if(os.path.isfile(toData)):

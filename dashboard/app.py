@@ -27,11 +27,11 @@ app = Flask(__name__ ) #, static_folder="../data" )
 
 @app.route('/')
 def index():
-	return render_template('home.html')
+	return render_template('peta.html')
 	
 @app.route('/about')
 def about():
-	return render_template('about.html')
+	return render_template('peta.html')
 	
 @app.route('/peta')
 def peta():
