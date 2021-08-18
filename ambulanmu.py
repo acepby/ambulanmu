@@ -341,7 +341,7 @@ def cancel(update: Update, context: CallbackContext) -> int:
 	return ConversationHandler.END
 
 def getUpdateLoc(update: Update,context:CallbackContext):
-	print(update)
+	#print(update)
 	#global features
 	updateId = update.update_id
 	currData = update.edited_message
