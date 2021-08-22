@@ -7,6 +7,7 @@
             rel="stylesheet"
             type="text/css"
             href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"/>
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" type="text/css">
         <script
             src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"
             type="text/javascript">
@@ -15,6 +16,15 @@
 			src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-realtime/2.2.0/leaflet-realtime.min.js"
 			type="text/javascript">
 		</script>
+		
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+
+		<!-- Include this library for mobile touch support  -->
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
+
+
+		<script src="dashboard/static/js/SliderControl.js"></script>
         <style>
             #map {
                 position: absolute;
@@ -35,7 +45,14 @@
 			//oneachfeature
 			var olddriver = null;
 			var polys = [[]];
-			var markers = [[]];
+			//var markers = [[]];
+			
+			//pointlayer
+			var oldsopir = null;
+			var test = [[]];
+			
+			//slider
+			var sliderControl = null;
 			
 			//https://stackoverflow.com/a/48167596
 			
@@ -60,9 +77,9 @@
 					
 					polys[olddriver].push(L.polyline([lastlatlng],{color: "red"}).addTo(map));					
 				}
-
+				//console.log(polys);
 				var poly = polys[olddriver][polys[olddriver].length-1]; //get last line
-				//console.log(poly);
+				
 				
 				poly.addLatLng(layer.getLatLng());
 				layer.bindPopup(function() {
@@ -74,31 +91,7 @@
 				
 			}
             
-            //
-            /*
-            function point2layer(feature,latlng){
-					var ambulanIcon = L.icon({
-											iconSize: [18, 20],
-											iconAnchor: [13, 27],
-											popupAnchor:  [1, -24],
-											iconUrl: 'static/icons/' + feature.properties.state + '.png'
-						});
-						console.log(feature.properties.state);
-						
-					if(feature.properties.driver && olddriver != feature.properties.driver){
-						olddriver = feature.properties.driver;
-						markers[olddriver]=[];
-						console.log(markers);
-						markers[olddriver].push(L.marker(latlng,{icon:ambulanIcon}).addTo(map));					
-					}
-					
-					var marker = markers[olddriver][markers[oldriver].lenght -1];
-					console.log(marker);
-					
-					
-				}
-				*/
-            
+                      
             //watermark logo
             L.Control.Support = L.Control.extend({
 					onAdd: function(map){
@@ -116,10 +109,8 @@
 			L.control.support = function(opts){
 					return new L.Control.Support(opts)
 				}
-			//icon
-			
-			
-            
+			            
+            //realtime 
             function createRealtimeLayer(url) {
 				return L.realtime(url, {
 					interval: 10 * 1000,
@@ -130,39 +121,54 @@
 					//poinToLayer:point2layer,
 					
 					pointToLayer: function(f,latlng){
-						//console.log(latlng);
+						console.log(f.properties);
 						var oldsopir = null;
 						var test = [[]];
+						//var test[oldsopir]=[];
 						var ambulanIcon = L.icon({
-											iconSize: [18, 20],
-											iconAnchor: [13, 27],
+											iconSize: [48, 48],
+											iconAnchor: [24, 24],
 											popupAnchor:  [1, -24],
 											iconUrl: 'dashboard/static/icons/' + f.properties.state + '.png'
 						});
 						
 						if (f.properties.driver && oldsopir != f.properties.driver){
+							oldsopir = f.properties.driver;
 							test[oldsopir]=[];
+							//test[oldsopir][f.properties.mid]=[]
+							//console.log(test[oldsopir]);
 							test[oldsopir].push(L.marker(latlng,{icon:ambulanIcon}).addTo(map));
 						}
+						//console.log(oldsopir);
 						//test[f.properties.driver]=[]													
-						//console.log(test[oldsopir][0]);						
+						//console.log(test);						
 						//return L.marker(latlng,{icon:ambulanIcon});
+						
 						return test[oldsopir][0];
-					}, 					
+					}, 				
 									
 					onEachFeature: onEachFeature
 				});
 			}
-			
+			//console.log(test);
 			var map = L.map('map').setView(center, 6);
 			var ambulan = createRealtimeLayer(url);
-			ambulan.addTo(map)
+			ambulan.addTo(map);
+			sliderControl= L.control.sliderControl({
+					position: "topright",
+					layer: ambulan,
+					timeAttribute:"waktu",
+					range:true
+				});
 								
 			ambulan.once('update', function() {
-                                map.fitBounds(ambulan.getBounds(), {maxZoom:20});
+                                map.flyToBounds(ambulan.getBounds(), {maxZoom:20});
                         });
             
             L.control.support({position:'bottomleft'}).addTo(map); 
+            //map.addControl(sliderControl);
+            //sliderControl.addTo(map);
+            //sliderControl.startSlider();
 
             // Stamen's Toner basemap
             L.tileLayer(
