@@ -19,7 +19,7 @@ def jarak(lokasi0,lokasi1,lat,lon): #(lokasi,tujuan):
 	#jariBumi = 6371.01
 	res = jariBumi*acos(sin(slat)*sin(elat) + cos(slat)*cos(elat)*cos(slon - elon))
 	#print(res)
-	return round(res,2) #jariBumi *acos(sin(slat)*sin(elat) + cos(slat)*cos(elat)*cos(slon - elon))
+	return round(res,5) #jariBumi *acos(sin(slat)*sin(elat) + cos(slat)*cos(elat)*cos(slon - elon))
 
 def bounding(lokasi,area):
 	maxLat = lokasi[0] + rad2deg(area/jariBumi)

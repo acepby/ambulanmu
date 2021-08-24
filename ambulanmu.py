@@ -42,6 +42,7 @@ from dotenv import load_dotenv,find_dotenv
 from os import getenv
 import json
 import datetime
+from jaraklokasi import jarak
 
 
 # TODO
@@ -68,6 +69,8 @@ TOKEN = getenv("TOKEN")
 abm = Ambulan()
 shelter = Shelter()
 #abmlist = abm.listByKota()
+
+recentLoc={}
 
 
 DEST,LOC,AMBULANMU,SHELTERMU,LAYANAN,TRACKING,DETAIL = range(7)
@@ -255,8 +258,8 @@ def getShelterMu(data):
 	
 #tracking ambulanmu
 def tracking(update: Update, context: CallbackContext):
-	#print(update)
-	user = update.callback_query.message.from_user
+	print(update)
+	user = update.callback_query.message.chat
 	#print(update.update_id)
 	logger.info("Driver: %s", user.first_name)
 	text = "Kemana tujuan ambulanmu?"
@@ -269,7 +272,7 @@ def tracking(update: Update, context: CallbackContext):
 def tujuan(update: Update, context: CallbackContext):
 	user = update.message.from_user
 	print(context.user_data)
-	print("catat tujuan :",update)
+	#print("catat tujuan :",update)
 	global tujuan
 	tujuan = update.message.text
 	
@@ -281,10 +284,10 @@ def tujuan(update: Update, context: CallbackContext):
 	return LOC
 
 def location(update: Update, context: CallbackContext):
-	keyboard= [[InlineKeyboardButton("🏠 Kembali",callback_data=str(BACK))]]
-	markup = InlineKeyboardMarkup(keyboard)
+	#global recentLoc
 	last_id = update.update_id
 	user = update.message.chat
+	#print('cek:',update)
 	mid =update.message.message_id
 	driver ={}
 	driver['id'] = user.id
@@ -292,9 +295,15 @@ def location(update: Update, context: CallbackContext):
 	driver['firstname']=user.first_name
 	
 	live_update = update.message.location
+	recentLoc[0] = live_update.longitude
+	recentLoc[1] = live_update.latitude
+	
 	text = ('live location sudah di rekam. Selamat Bertugas. \n')
 	#live_update =
-	print("catat lokasi :",update)
+	keyboard= [[InlineKeyboardButton("🏠 Kembali",callback_data=str(BACK))]]
+	markup = InlineKeyboardMarkup(keyboard)
+	#print("catat lokasi :",update)
+	
 	lokasi = "({},{})".format(live_update.longitude, live_update.latitude)
 	#simpan data {user, lokasi=(lon,lat), tujuan,waktu}
 	trackingLog(driver,tujuan,lokasi,update.message.date)
@@ -342,16 +351,26 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 def getUpdateLoc(update: Update,context:CallbackContext):
 	#print(update)
-	#global features
+	
 	updateId = update.update_id
 	currData = update.edited_message
+		
 	if currData :
 		tgl = currData.edit_date
 		lon = currData.location.longitude
 		lat = currData.location.latitude
 		nm = currData.from_user
 		mid = currData.message_id
-		toGeoJson(updateId,mid,nm.first_name, lon,lat,'latest',tgl)
+		#tapis kordinat radius disini
+		#hitung kordinat sekarang dengan kordinat sebelumnya
+		#saat ini dibuat radius minimal 5 meter 
+		#sepertinya memungkinkan utk membuat prediksi heading
+		if(recentLoc):
+			if(jarak(recentLoc[0],recentLoc[1],lon,lat)>=0.005):
+				#global recentLoc
+				recentLoc[0]=lon
+				recentLoc[1]=lat
+				toGeoJson(updateId,mid,nm.first_name, lon,lat,'latest',tgl)
 		#writeGeoJson(features)
 		
 	
@@ -386,6 +405,10 @@ def writeGeoJson(features):
 	#print(feature_collection)
 	with open(toData,"w") as f:
 		dump(feature_collection,f)
+
+def error(update, context):
+	"""Log Errors caused by Updates."""
+	logger.warning('Update "%s" caused error "%s"', update, context.error)
 		
 
 def main():
@@ -439,8 +462,18 @@ def main():
 	)
 	
 	dispatcher.add_handler(layanan_handler)
-	dispatcher.add_handler(MessageHandler(Filters.all, getUpdateLoc))
-	
+	dispatcher.add_handler(MessageHandler(Filters.location, getUpdateLoc))
+	# log all errors
+	dispatcher.add_error_handler(error)
+	#webhook for production
+	'''
+	updater.start_webhook(
+				listen="127.0.0.1",
+				port=5000,
+				url_path=TOKEN,
+				cert='/home/nginx-selfsigned.pem',
+				webhook_url="https://dashboard.ppm.my.id/ambulanmu/"+TOKEN)
+    '''
 	updater.start_polling()
 	updater.idle()
 
