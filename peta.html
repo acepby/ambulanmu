@@ -40,7 +40,9 @@
 		<script src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
 
 
-		<script src="dashboard/static/js/SliderControl.js"></script>
+		<!-- <script src="dashboard/static/js/SliderControl.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/gh/Falke-Design/LeafletSlider@latest/dist/leaflet.SliderControl.min.js"></script>
+		
 		<!-- After Leaflet script -->
 		<script src="https://unpkg.com/leaflet.featuregroup.subgroup@1.0.2/dist/leaflet.featuregroup.subgroup.js"></script>
         //
@@ -85,7 +87,7 @@
 					}
 					//End of block
 										
-					polys[olddriver].push(L.polyline([lastlatlng],{color: "grey"}).addTo(map));					
+					polys[olddriver].push(L.polyline([lastlatlng],{color: "grey",weight:1}).addTo(map));					
 				}
 				//console.log(polys);
 				var poly = polys[olddriver][polys[olddriver].length-1]; //get last line
@@ -124,6 +126,7 @@
 				var poly = mypolys[myolddriver][mypolys[myolddriver].length-1]; //get last line
 								
 				poly.addLatLng(layer.getLatLng());
+				
 				layer.bindPopup(function() {
 							return '<h3>' + feature.properties.driver + '</h3>' +
 								'<p>' + feature.properties.state +'</p>' +
@@ -169,7 +172,7 @@
 					
 					
 					pointToLayer: function(f,latlng){
-						//console.log(f.properties);
+						//console.log(f.properties.driver);
 						var oldsopir = null;
 						var test = [[]];
 						//var test[oldsopir]=[];
@@ -229,25 +232,25 @@
 					onEachFeature: todayOnEachFeature
 				});
 			}
-			
-		
+					
 			//console.log(test);
 			var map = L.map('map').setView(center, 6);
+						
 			var ambulan2 = createRealtimeLayer(url);
 			var ambulan = createTodayLayer(url).addTo(map);
-			
-			/*
+														
+			/*			
 			sliderControl= L.control.sliderControl({
 					position: "topright",
-					layer: mydata,
+					layer: dtg,
 					timeAttribute:"waktu",
 					startTimeIdx: 0, 
 					timeStrLength: 25,
 					alwaysShowDate : false,
 					range:true
 				});
-			*/		
-			
+				*/
+					
 			 L.control.support({position:'bottomleft'}).addTo(map); 
             //map.addControl(sliderControl);
             //sliderControl.addTo(map);
@@ -263,12 +266,12 @@
                         'OpenStreetMap</a>, under' +
                         '<a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
             }).addTo(map);
-            
+                        
             L.control.layers(null,{
 				'Hari ini' : ambulan,
 				'Semua' : ambulan2
 			}).addTo(map);
-				
+						
 			ambulan.once('update', function() {
 								if(ambulan.getBounds().isValid()){
 									map.flyToBounds(ambulan.getBounds(), {maxZoom:20});
