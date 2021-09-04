@@ -1,162 +1,9 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Route AmbulanMu</title>
-        <!-- <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"> -->
-        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-
-        
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"/>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.min.css" integrity="sha512-okE4owXD0kfXzgVXBzCDIiSSlpXn3tJbNodngsTnIYPJWjuYhtJ+qMoc0+WUwLHeOwns0wm57Ka903FqQKM1sA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link rel="stylesheet" href="https://www.unpkg.com/leaflet-sidebar-v2@3.2.3/css/leaflet-sidebar.min.css" type="text/css">
-        
-        
-
-        <style>
-            #info {
-				position: fixed;
-				top: 0;
-				left: 0;
-				bottom: 0;
-				width: 20vw;
-				padding: 1em;
-			}
-			
-			body {
-            padding: 0;
-            margin: 0;
-        }
-
-        html, body, #map {
-            height: 100%;
-            font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
-        }
-			
-			#displayed-list ul, #displayed-list li {
-				margin: 0; padding: 0;
-			}
-			.leaflet-sidebar-header {
-					background-color:orangered;
-				}
-			
-			.leaflet-sidebar-tabs>li.active, .leaflet-sidebar-tabs>ul>li.active{
-				background-color:orangered;
-			}
-		#daily-chart {
-			display: block;
-			width: 100%;
-		}
-      
-        </style>
-    </head>
-    <body>
-		<!-- <div id="info">
-			<h1> Ambulan</h1>
-			<div id="layanan"></div>
-			<ul id="displayed-list" style="list-style-type:none;"></ul>
-			<div id="kilometer"></div>
-		</div> -->
-		
-		<!-- optionally define the sidebar content via HTML markup -->
-    <div id="sidebar" class="leaflet-sidebar collapsed">
-
-        <!-- nav tabs -->
-        <div class="leaflet-sidebar-tabs">
-            <!-- top aligned tabs -->
-            <ul role="tablist">
-                <li><a href="#home" role="tab"><i class="fa fa-bars active"></i></a></li>
-                <li><a href="#stats" role="tab"><i class="fa fa-bar-chart"></i></a></li>
-                <li><a href="#mobile" role="tab"><i class="fa fa-ambulance"></i></a></li>
-            </ul>
-
-            <!-- bottom aligned tabs -->
-            <ul role="tablist">
-                <li><a href="https://github.com/acepby/ambulanmu"><i class="fa fa-github"></i></a></li>
-            </ul>
-        </div>
-
-        <!-- panel content -->
-        <div class="leaflet-sidebar-content">
-            <div class="leaflet-sidebar-pane" id="home">
-                <h1 class="leaflet-sidebar-header">
-                    AmbulanMU
-                    <span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span>
-                </h1>
-
-                <p>keterangan ambulanmu</p>
-            </div>
-
-            <div class="leaflet-sidebar-pane" id="stats">
-                <h1 class="leaflet-sidebar-header">
-                    Statistik Ambulanmu
-                    <span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span>
-                </h1>
-                <h2 id="layanan"></h2>
-                <!-- <div id="layanan"></div> -->
-                <canvas id="layanan-chart"></canvas>
-                <h2 id="kilometer"></h2>
-                <canvas id="daily-chart"></canvas>
-                         
-            </div>
-            <div class="leaflet-sidebar-pane" id="mobile">
-				<h1 class="leaflet-sidebar-header">
-                    Driver Ambulanmu
-                    <span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span>
-                </h1>
-                <h2>List Driver</h2>
-				<ul id="displayed-list" style="list-style-type:none;"></ul>
-				
-            </div>
-
-            <div class="leaflet-sidebar-pane" id="messages">
-                <h1 class="leaflet-sidebar-header">Messages<span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
-            </div>
-        </div>
-    </div>
-
-		
-        <div id="map">
-        </div>
-        
-        <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"
-            type="text/javascript">
-        </script>
-        <script
-			src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-realtime/2.2.0/leaflet-realtime.min.js"
-			type="text/javascript">
-		</script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-		
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js" integrity="sha512-uto9mlQzrs59VwILcLiRYeLKPPbS/bT71da/OEBYEwcdNUk8jYIy+D176RYoop1Da+f9mvkYrmj5MCLZWEtQuA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-		<!-- Include this library for mobile touch support  -->
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
-
-
-		<!-- <script src="dashboard/static/js/SliderControl.js"></script> -->
-		<script src="https://cdn.jsdelivr.net/gh/Falke-Design/LeafletSlider@latest/dist/leaflet.SliderControl.min.js"></script>
-		
-		<!-- After Leaflet script -->
-		<script src="https://unpkg.com/leaflet.featuregroup.subgroup@1.0.2/dist/leaflet.featuregroup.subgroup.js"></script>
-		<script src="https://www.unpkg.com/leaflet-sidebar-v2@3.2.3/js/leaflet-sidebar.min.js" crossorigin="" type="application/javascript"></script>
-		<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js" referrerpolicy="no-referrer"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js" integrity="sha512-Wt1bJGtlnMtGP0dqNFH1xlkLBNpEodaiQ8ZN5JLA5wpc1sUlk/O5uuOMNgvzddzkpvZ9GLyYNa8w2s7rqiTk5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-		<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0/dist/chartjs-adapter-moment.min.js"></script>
-		
-		
-		
-        
-        <script>
-            // set up map
+//script for map
+// set up map
             
             var center = [-1.328499, 121.589203];
             var map = L.map('map').setView(center, 6);
-            var url = "data/ambulan.geojson";   //{{url_for('data_source',filename='ambulan.geojson')}};
+            var url = "../data/ambulan.geojson";   //{{url_for('data_source',filename='ambulan.geojson')}};
             var myOldId= null;
             var layers ={};
             var dailyJarak=[];
@@ -303,10 +150,7 @@
 
 				return 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
 			};
-			
-			//console.log('mygeo',mygeojson);
-			//console.log(realtime._features);
-		         
+								         
             //watermark logo
             L.Control.Support = L.Control.extend({
 					onAdd: function(map){
@@ -321,14 +165,11 @@
 					}
 			})
 			
-			
-			
 			L.control.support = function(opts){
 					return new L.Control.Support(opts)
 				}
 		
-			//console.log(test);
-			
+						
 			L.control.support({position:'bottomleft'}).addTo(map); 
             
             // Stamen's Toner basemap
@@ -345,10 +186,7 @@
             realtime.once('update', function() {
 				map.fitBounds(realtime.getBounds(), {maxZoom: 8});
 			});
-			
-			//console.log('real',realtime)
-			//geojson selector
-			
+							
 			//hitung jarak
 			//[1,2,3,4,5] ==>[[1,2],[2,3],[3,4],[4,5]
 			
@@ -358,11 +196,10 @@
 				for(var i = 0; i < arr.length-1; i ++) {
 					var test = arr.slice(i, i+size);
 					var tempDist = (distance(test[0][1],test[0][0],test[1][1],test[1][0])).toFixed(2);
-					//console.log('temptdist',tempDist);
 					dist += +tempDist;
-					//myArray.push(arr.slice(i, i+size));
+					
 				}
-				//return myArray;
+				
 				return dist;
 			}
 				
@@ -370,7 +207,6 @@
 					//id,tanggal,jarak
 					let id =data.feature.properties.id;
 					let tanggal =new Date(data.feature.properties.time[data.feature.properties.time.length - 1]).toLocaleDateString('id-ID');
-					//let jarak = jarakTempuh(data.feature.geometry.coordinates);
 					let jarak = sumJarak(data.feature.geometry.coordinates,2);
 					
 					let harian ={
@@ -407,26 +243,21 @@
 							return {x:item['tanggal'],y:item['jarak']};
 						});
 					
-					return dailyData;
-						
-				
+					return dailyData;	
 			}
 			
 			function layananSeries(data){
 					var freqLayanan= new Map();
 					data.forEach(function(tgl){
-							//console.log('tgl',tgl.tanggal);
 							var key = tgl.tanggal;
 							var count = freqLayanan.get(key)||0;
 							freqLayanan.set(key, ++count);
 						});
 					
 					var layananHarian = Array.from(freqLayanan,([x,y])=>({x,y}))
-						
-					//console.log('layanan',layananHarian);
-					return layananHarian;
 					
-				}
+					return layananHarian;
+			}
 			
 			
 			function routeUpdate(realtime){
@@ -438,15 +269,10 @@
 				var layanan = document.getElementById("layanan");
 				layanan.innerHTML ="<b>Total Layanan : "+keys.length+ "</b>";
 				var kilo = document.getElementById("kilometer");
-				//kilo.innerHTML ="";
 				kilometer=0
-				//jarakharian = {id,tgl,jarak}
 				var rawJarakHarian= [];
-				
-				
-				
+								
 				keys.forEach(function(route){
-						//var mydist = jarakTempuh(tampilkan[route].feature.geometry.coordinates);
 						let mydist = dailyDist(tampilkan[route]);
 						var li = document.createElement("li");
 						li.innerHTML = '['+mydist.id+'] '+ tampilkan[route].feature.properties.driver +': '+mydist.jarak+' Km';
@@ -457,27 +283,17 @@
 						
 					}); 
 				
-					//console.log('rawjarak',rawJarakHarian);
 					mydaily=jarakSeries(rawJarakHarian);
-					
 					layanHarian = layananSeries(rawJarakHarian);
-					//console.log('layan',layanHarian);
-					
-					//dailyJarak=test.slice(0);
 					dailyJarak.splice(0,dailyJarak.length,...mydaily);
-					//jarakTimeSeries(dailyJarak,"Jarak Tempuh Harian","#daily-chart");
-					dailyLayanan.splice(0,dailyLayanan.length,...layanHarian);
-					
-				 
+					dailyLayanan.splice(0,dailyLayanan.length,...layanHarian);			 
 				}
 				
 			realtime.on('update', function(e){
-					
 					routeUpdate(e.target);
 					initChartHarian(chartHarian,dailyJarak);
 					initChartHarian(layananHarian,dailyLayanan);
-					
-					
+										
 				});
 				
 				//sidebar
@@ -495,13 +311,9 @@
 							sidebar.options.autopan = false;
 					}
 				});
-				
-				//console.log('layers',layers);
-				
+							
 				//chart harian 
-				//chart
-				//function jarakTimeSeries(data,label,selector){
-				
+								
 				function myContext(selector){	
 					const ctx = document.querySelector(selector).getContext('2d');
 					return ctx;
@@ -550,8 +362,3 @@
 					chart.data.datasets[0].data = data;
 					chart.update();
 				}
-				
-                        
-        </script>
-    </body>
-</html>

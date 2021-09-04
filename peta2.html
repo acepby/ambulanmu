@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>AmbulanMu</title>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"/>
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" type="text/css">
+        
+
+        <style>
+            #map {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        //
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"
+            type="text/javascript">
+        </script>
+        <script
+			src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-realtime/2.2.0/leaflet-realtime.min.js"
+			type="text/javascript">
+		</script>
+		
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+
+		<!-- Include this library for mobile touch support  -->
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.2/jquery.ui.touch-punch.min.js"></script>
+
+
+		<!-- <script src="dashboard/static/js/SliderControl.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/gh/Falke-Design/LeafletSlider@latest/dist/leaflet.SliderControl.min.js"></script>
+		
+		<!-- After Leaflet script -->
+		<script src="https://unpkg.com/leaflet.featuregroup.subgroup@1.0.2/dist/leaflet.featuregroup.subgroup.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js" integrity="sha512-Abr21JO2YqcJ03XGZRPuZSWKBhJpUAR6+2wH5zBeO4wAw4oksr8PRdF+BKIRsxvCdq+Mv4670rZ+dLnIyabbGw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        //
+        <script>
+            // set up map
+            var center = [-1.328499, 121.589203];
+            var url = "data/ambulan.geojson";   //{{url_for('data_source',filename='ambulan.geojson')}};
+			
+			//oneachfeature
+			var olddriver = null;
+			var polys = [[]];
+			var myolddriver =null;
+			var mypolys =[[]];
+			
+			
+			//pointlayer
+			var oldsopir = null;
+			var test = [[]];
+			var mysopir = null;
+			var markers = [[]];
+			
+			//slider
+			var sliderControl = null;
+			
+			//https://stackoverflow.com/a/48167596
+			
+			function onEachFeature(feature, layer) {
+				if(feature.properties.mid && olddriver != feature.properties.mid){
+					olddriver = feature.properties.mid;
+					polys[olddriver]=[];
+					
+					var lastlatlng = [];
+										
+					//This block gets the last latlng from the line before. so you have one line.
+					// If you  want to seperate the lines by color, deleted this block
+					if( polys[olddriver].length > 0){
+						var lastpoly = polys[olddriver][polys[olddriver].length-1];
+							if(lastpoly.getLatLngs() && lastpoly.getLatLngs().length > 0){
+								var lastlatlngs = lastpoly.getLatLngs();
+								lastlatlng = lastlatlngs[0][lastlatlngs[0].length-1];
+							}
+					}
+					//End of block
+										
+					polys[olddriver].push(L.polyline([lastlatlng],{color: "grey",weight:1}).addTo(map));					
+				}
+				//console.log(polys);
+				var poly = polys[olddriver][polys[olddriver].length-1]; //get last line
+								
+				poly.addLatLng(layer.getLatLng());
+				layer.bindPopup(function() {
+							return '<h3>' + feature.properties.driver + '</h3>' +
+								'<p>' + feature.properties.state +'</p>' +
+								'<b>'+ feature.properties.upid +'</b>'+
+								'<p>' + new Date(feature.properties.waktu);
+						});
+			}
+			
+			//today each
+			function todayOnEachFeature(feature, layer) {
+				if(feature.properties.mid && myolddriver != feature.properties.mid){
+					myolddriver = feature.properties.mid;
+					mypolys[myolddriver]=[];
+					
+					var lastlatlng = [];
+										
+					//This block gets the last latlng from the line before. so you have one line.
+					// If you  want to seperate the lines by color, deleted this block
+					if( mypolys[myolddriver].length > 0){
+						var lastpoly = mypolys[myolddriver][mypolys[myolddriver].length-1];
+							if(lastpoly.getLatLngs() && lastpoly.getLatLngs().length > 0){
+								var lastlatlngs = lastpoly.getLatLngs();
+								lastlatlng = lastlatlngs[0][lastlatlngs[0].length-1];
+							}
+					}
+					//End of block
+										
+					mypolys[myolddriver].push(L.polyline([lastlatlng],{color: "green"}).addTo(map));					
+				}
+				//console.log(polys);
+				var poly = mypolys[myolddriver][mypolys[myolddriver].length-1]; //get last line
+								
+				poly.addLatLng(layer.getLatLng());
+				
+				layer.bindPopup(function() {
+							return '<h3>' + feature.properties.driver + '</h3>' +
+								'<p>' + feature.properties.state +'</p>' +
+								'<b>'+ feature.properties.upid +'</b>'+
+								'<p>' + new Date(feature.properties.waktu);
+						});
+				
+			}
+			
+			//just for today marker
+			function ambulanToday(feature,layer){
+				return new Date(feature.properties.waktu).toLocaleDateString()==new Date().toLocaleDateString()
+			}
+            
+                      
+            //watermark logo
+            L.Control.Support = L.Control.extend({
+					onAdd: function(map){
+						var img = L.DomUtil.create('img');
+						img.src ='https://github.com/azhargiri/mit-logo/raw/master/logo_mit_300.png';
+						img.style.width ='52px';
+						img.title ='mitsociety.id';
+						return img;						
+					},
+					
+					onRemove: function(map){
+					}
+			})
+			
+			L.control.support = function(opts){
+					return new L.Control.Support(opts)
+				}
+			            
+            //realtime 
+            function createRealtimeLayer(url) {
+				return L.realtime(url, {
+					interval: 10 * 1000,
+					getFeatureId: function(f) {
+						return f.properties.upid;
+					},
+					cache: true,
+					//container: container,
+					
+					
+					pointToLayer: function(f,latlng){
+						//console.log(f.properties.driver);
+						var oldsopir = null;
+						var test = [[]];
+						//var test[oldsopir]=[];
+						var ambulanIcon = L.icon({
+											iconSize: [48, 48],
+											iconAnchor: [24, 24],
+											popupAnchor:  [1, -24],
+											iconUrl: 'dashboard/static/icons/' + f.properties.state + '.png'
+						});
+						
+						if (f.properties.driver && oldsopir != f.properties.driver){
+							oldsopir = f.properties.driver;
+							test[oldsopir]=[];
+							test[oldsopir].push(L.marker(latlng,{icon:ambulanIcon}));
+						}
+												
+						return test[oldsopir][0];
+					}, 				
+									
+					onEachFeature: onEachFeature
+				});
+			}
+			
+			//realtime 
+            function createTodayLayer(url) {
+				return L.realtime(url, {
+					interval: 10 * 1000,
+					getFeatureId: function(f) {
+						return f.properties.upid;
+					},
+					cache: true,
+					//container: container,
+					//poinToLayer:point2layer,
+					filter: ambulanToday,
+					
+					pointToLayer: function(f,latlng){
+						//console.log(f.properties);
+						var mysopir = null;
+						var markers = [[]];
+						//var test[oldsopir]=[];
+						var ambulanIcon = L.icon({
+											iconSize: [48, 48],
+											iconAnchor: [24, 24],
+											popupAnchor:  [1, -24],
+											iconUrl: 'dashboard/static/icons/' + f.properties.state + '.png'
+						});
+						
+						if (f.properties.driver && mysopir != f.properties.driver){
+							mysopir = f.properties.driver;
+							markers[mysopir]=[];
+							markers[mysopir].push(L.marker(latlng,{icon:ambulanIcon}).addTo(map));
+						}
+						
+						return markers[mysopir][0];
+					}, 				
+									
+					onEachFeature: todayOnEachFeature
+				});
+			}
+					
+			//console.log(test);
+			var map = L.map('map').setView(center, 6);
+						
+			var ambulan2 = createRealtimeLayer(url);
+			var ambulan = createTodayLayer(url).addTo(map);
+			var my_history = null;
+			
+			$.getJSON(url,function(json){
+					my_history = L.geoJson(json);
+					my_history.on('click',function(e){
+							var layer = e.layer;
+							layer.bindPopup(layer.feature.properties.driver).openPopup();
+						});
+					
+					sliderControl= L.control.sliderControl({
+						position: "topright",
+						layer: my_history,
+						timeAttribute:"waktu",
+						follow:0,
+						startTimeIdx: 0, 
+						timeStrLength: 25,
+						maxValue:1,
+						alwaysShowDate : false,
+						showAllOnStart: true,
+						sameDate: true,
+						orderMarkers:true,
+						orderDesc:false,
+						rezoom:10,
+						range:true
+					});
+					
+					L.control.layers(null,{
+						'Hari ini' : ambulan,
+						'Semua' : ambulan2,
+						'History':my_history
+					}).addTo(map);
+					
+					//map.addControl(sliderControl);
+					
+					sliderControl.addTo(map);
+					sliderControl.startSlider();
+				});											
+					
+			
+			
+					
+			L.control.support({position:'bottomleft'}).addTo(map); 
+           
+
+            // Stamen's Toner basemap
+            L.tileLayer(
+                'https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+                    attribution: 'Map tiles by <a href="http://stamen.com">' +
+                        'Stamen Design</a>, under' +
+                        '<a href="http://creativecommons.org/licenses/by/3.0">' +
+                        'CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">' +
+                        'OpenStreetMap</a>, under' +
+                        '<a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+            }).addTo(map);
+            /*            
+            L.control.layers(null,{
+				'Hari ini' : ambulan,
+				'Semua' : ambulan2,
+				'History':my_history
+			}).addTo(map);
+			*/
+			ambulan.once('update', function() {
+								if(ambulan.getBounds().isValid()){
+									map.flyToBounds(ambulan.getBounds(), {maxZoom:20});
+								};
+                        });
+              
+            
+           
+        </script>
+    </body>
+</html>
