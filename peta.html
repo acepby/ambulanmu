@@ -45,6 +45,7 @@
 		
 		<!-- After Leaflet script -->
 		<script src="https://unpkg.com/leaflet.featuregroup.subgroup@1.0.2/dist/leaflet.featuregroup.subgroup.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js" integrity="sha512-Abr21JO2YqcJ03XGZRPuZSWKBhJpUAR6+2wH5zBeO4wAw4oksr8PRdF+BKIRsxvCdq+Mv4670rZ+dLnIyabbGw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         //
         <script>
             // set up map
@@ -238,23 +239,49 @@
 						
 			var ambulan2 = createRealtimeLayer(url);
 			var ambulan = createTodayLayer(url).addTo(map);
-														
-			/*			
-			sliderControl= L.control.sliderControl({
-					position: "topright",
-					layer: dtg,
-					timeAttribute:"waktu",
-					startTimeIdx: 0, 
-					timeStrLength: 25,
-					alwaysShowDate : false,
-					range:true
-				});
-				*/
+			var my_history = null;
+			
+			$.getJSON(url,function(json){
+					my_history = L.geoJson(json);
+					my_history.on('click',function(e){
+							var layer = e.layer;
+							layer.bindPopup(layer.feature.properties.driver).openPopup();
+						});
 					
-			 L.control.support({position:'bottomleft'}).addTo(map); 
-            //map.addControl(sliderControl);
-            //sliderControl.addTo(map);
-            //sliderControl.startSlider();
+					sliderControl= L.control.sliderControl({
+						position: "topright",
+						layer: my_history,
+						timeAttribute:"waktu",
+						follow:0,
+						startTimeIdx: 0, 
+						timeStrLength: 25,
+						maxValue:1,
+						alwaysShowDate : false,
+						showAllOnStart: true,
+						sameDate: true,
+						orderMarkers:true,
+						orderDesc:false,
+						rezoom:10,
+						range:true
+					});
+					
+					L.control.layers(null,{
+						'Hari ini' : ambulan,
+						'Semua' : ambulan2,
+						'History':my_history
+					}).addTo(map);
+					
+					//map.addControl(sliderControl);
+					
+					sliderControl.addTo(map);
+					sliderControl.startSlider();
+				});											
+					
+			
+			
+					
+			L.control.support({position:'bottomleft'}).addTo(map); 
+           
 
             // Stamen's Toner basemap
             L.tileLayer(
@@ -266,17 +293,19 @@
                         'OpenStreetMap</a>, under' +
                         '<a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
             }).addTo(map);
-                        
+            /*            
             L.control.layers(null,{
 				'Hari ini' : ambulan,
-				'Semua' : ambulan2
+				'Semua' : ambulan2,
+				'History':my_history
 			}).addTo(map);
-						
+			*/
 			ambulan.once('update', function() {
 								if(ambulan.getBounds().isValid()){
 									map.flyToBounds(ambulan.getBounds(), {maxZoom:20});
 								};
                         });
+              
             
            
         </script>
