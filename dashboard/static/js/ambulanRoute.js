@@ -9,11 +9,6 @@
             var dailyJarak=[];
             var dailyLayanan=[];
             
-            /*
-            var myroute = [[]];
-            var myfeature =[]; 
-            var mygeojson = {"type": "FeatureCollection", "features": []} ;
-            */	
             //icon 
             var startIcon = L.icon({
 				iconSize: [48, 48],
@@ -50,10 +45,7 @@
 									upid =[item.properties.upid];
 									time =[item.properties.waktu];
 									state=[item.properties.state];
-									//color= '#' + Math.floor(myOldId + Math.random()*16777215).toString(16);
-									//console.log(color);
 									
-									//myroute[myOldId][0] = item.geometry.coordinates;
 									myroute[myOldId] ={type:'Feature',
 										properties:{ id:myOldId, driver: driver,upid: upid,state:state,time:time},
 										geometry:{type:'LineString',coordinates:[item.geometry.coordinates]}};
@@ -73,12 +65,7 @@
 								if(key !=0){
 										//console.log(key.properties.id);
 									myfeature.push(key);
-									/*
-									if(!myfeature[key])
-										myfeature[key] = key;
-									else
-										myfeature[key].push(key);
-									*/
+									
 								}
 							}); 
 							
