@@ -3,7 +3,7 @@
             
             var center = [-1.328499, 121.589203];
             var map = L.map('map').setView(center, 6);
-            var url = "../data/ambulan.geojson";   //{{url_for('data_source',filename='ambulan.geojson')}};
+            var url = "data/ambulan.geojson";   //{{url_for('data_source',filename='ambulan.geojson')}};
             var myOldId= null;
             var layers ={};
             var dailyJarak=[];
