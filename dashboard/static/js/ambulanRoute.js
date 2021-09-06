@@ -8,6 +8,7 @@
             var layers ={};
             var dailyJarak=[];
             var dailyLayanan=[];
+            var recent;
             
             //icon 
             var startIcon = L.icon({
@@ -87,7 +88,7 @@
 						},
 					onEachFeature: markerPointer
 					}
-			).addTo(map);
+			);
 			
 			//addmarker
 			function markerPointer(feature,layer){
@@ -97,31 +98,55 @@
 				var end = feature.geometry.coordinates[numpts-1];
 				var akhir = numpts-1;
 				//layers ={};
-				layers[feature.properties.id]=layer;
+				layers[feature.properties.id]=L.layerGroup();
+				layers[feature.properties.id].addLayer(layer);
 				
 				//start marker
-				L.marker([beg[1],beg[0]],{icon:startIcon})
+				var startMarker = L.marker([beg[1],beg[0]],{icon:startIcon})
 				.bindPopup(function(){
 						return '<h3>' + feature.properties.driver + '</h3>' +
 								'<p>' + feature.properties.state[0] +'</p>' +
 								'<b>'+ feature.properties.upid[0] +'</b>'+
 								'<p>' + new Date(feature.properties.time[0]);
-				}).addTo(map);
+				});
+				
+				layers[feature.properties.id].addLayer(startMarker);
+				
 				
 				//end marker 
-				if(end != beg)
-					L.marker([end[1],end[0]],{icon:endIcon})
+				if(end != beg){
+					var endMarker = L.marker([end[1],end[0]],{icon:endIcon})
 					.bindPopup(function(){
 												
 						return '<h3>' + feature.properties.driver + '</h3>' +
 								'<p>' + feature.properties.state[akhir] +'</p>' +
 								'<b>'+ feature.properties.upid[akhir] +'</b>'+
 								'<p>' + new Date(feature.properties.time[akhir])+'</p>' +
-								'<p> Jarak :'+ (distance(beg[1],beg[0],end[1],end[0])).toFixed(2)+' km </p>';
+								'<p> Jarak :'+ (sumJarak(feature.geometry.coordinates,2)).toFixed(2)+' km </p>';
 						
-					}).addTo(map);
+					});
+					
+					layers[feature.properties.id].addLayer(endMarker);
+				}
 				
 			};
+			
+			//select fitur
+			//add recent route
+			//remove recent route 
+			
+			function recentRoute(rute,n){
+					var num = Object.keys(layers).sort().reverse();
+					recent = L.layerGroup();
+					
+					for(i=0;i<n;i++){
+							recent.addLayer(layers[num[i]]);
+						}
+					return recent.addTo(map);
+					
+				}
+			
+			
 			
 			function colorLine(feature){
 					
@@ -160,7 +185,7 @@
 			L.control.support({position:'bottomleft'}).addTo(map); 
             
             // Stamen's Toner basemap
-            L.tileLayer(
+            var tonerBM = L.tileLayer(
                 'https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
                     attribution: 'Map tiles by <a href="http://stamen.com">' +
                         'Stamen Design</a>, under' +
@@ -249,7 +274,7 @@
 			
 			function routeUpdate(realtime){
 				var tampilkan = realtime._featureLayers;
-				var keys = Object.keys(tampilkan);
+				var keys = Object.keys(tampilkan).sort().reverse();
 				//console.log(keys.length);
 				var list = document.getElementById("displayed-list");
 				list.innerHTML = "";
@@ -280,6 +305,7 @@
 					routeUpdate(e.target);
 					initChartHarian(chartHarian,dailyJarak);
 					initChartHarian(layananHarian,dailyLayanan);
+					recentRoute(layers,5); 
 										
 				});
 				
