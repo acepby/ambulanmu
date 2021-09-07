@@ -8,7 +8,9 @@
             var layers ={};
             var dailyJarak=[];
             var dailyLayanan=[];
-            var recent;
+            var recent= L.layerGroup();
+            var selected;
+            var oldSelected;
             
             //icon 
             var startIcon = L.icon({
@@ -98,6 +100,7 @@
 				var end = feature.geometry.coordinates[numpts-1];
 				var akhir = numpts-1;
 				//layers ={};
+				//recent = L.layerGroup();
 				layers[feature.properties.id]=L.layerGroup();
 				layers[feature.properties.id].addLayer(layer);
 				
@@ -129,6 +132,10 @@
 					layers[feature.properties.id].addLayer(endMarker);
 				}
 				
+				if (new Date(feature.properties.time[akhir]).toLocaleDateString("id-ID") == new Date().toLocaleDateString("id-ID")){
+					recent.addlayer(layers[feature.properties.id]);
+				}
+				
 			};
 			
 			//select fitur
@@ -136,18 +143,43 @@
 			//remove recent route 
 			
 			function recentRoute(rute,n){
-					var num = Object.keys(layers).sort().reverse();
-					recent = L.layerGroup();
+					var num = Object.keys(rute).sort().reverse();
 					
-					for(i=0;i<n;i++){
-							recent.addLayer(layers[num[i]]);
+					if(!selected){
+						if(recent.getLayers().length == 0){
+							for(i=0;i<n;i++){
+								recent.addLayer(rute[num[i]]);
+							}
 						}
-					return recent.addTo(map);
+				
+						return recent.addTo(map);
+					} else {
+						if(!oldSelected){
+							layers[selected].addTo(map);
+							map.flyTo(layers[selected].getLayers()[0].getLatLngs()[0],14);
+							oldSelected = selected;
+						} else {
+							map.removeLayer(layers[oldSelected]);
+							layers[selected].addTo(map);
+							map.flyTo(layers[selected].getLayers()[0].getLatLngs()[0],14);
+							oldSelected = selected;
+						}
+					}
+					
+				}
+				
+			function resetSelect(){
+					if(selected && oldSelected){
+							map.removeLayer(layers[oldSelected]);
+							selected=null;
+							oldSelected=null;
+						}
+					
+					return map.fitBounds(realtime.getBounds(), {maxZoom: 8});
 					
 				}
 			
-			
-			
+						
 			function colorLine(feature){
 					
 			};
@@ -163,7 +195,7 @@
 				return 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
 			};
 								         
-            //watermark logo
+            //watermark logo MITsociety
             L.Control.Support = L.Control.extend({
 					onAdd: function(map){
 						var img = L.DomUtil.create('img');
@@ -182,7 +214,8 @@
 				}
 		
 						
-			L.control.support({position:'bottomleft'}).addTo(map); 
+			L.control.support({position:'bottomleft'}).addTo(map); //add mitsociety logo
+			// end here
             
             // Stamen's Toner basemap
             var tonerBM = L.tileLayer(
@@ -287,6 +320,7 @@
 				keys.forEach(function(route){
 						let mydist = dailyDist(tampilkan[route]);
 						var li = document.createElement("li");
+						li.id = mydist.id;
 						li.innerHTML = '['+mydist.id+'] '+ tampilkan[route].feature.properties.driver +': '+mydist.jarak+' Km';
 						list.appendChild(li);
 						kilometer = Number(kilometer)+Number(mydist.jarak);
@@ -302,6 +336,7 @@
 				}
 				
 			realtime.on('update', function(e){
+					recent.clearLayers();
 					routeUpdate(e.target);
 					initChartHarian(chartHarian,dailyJarak);
 					initChartHarian(layananHarian,dailyLayanan);
@@ -320,8 +355,12 @@
 						case 'autopan':
 							sidebar.options.autopan = true;
 							break;
+						case 'mobile':
+							resetSelect();
+							break;
 						default:
 							sidebar.options.autopan = false;
+							resetSelect();
 					}
 				});
 							
@@ -375,3 +414,11 @@
 					chart.data.datasets[0].data = data;
 					chart.update();
 				}
+				
+				$(document).on('click','#displayed-list li', function(){
+						console.log(this.id);
+						selected = this.id;
+						recent.clearLayers();
+						recentRoute(layers,5);
+						
+					});
