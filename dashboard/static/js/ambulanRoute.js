@@ -156,12 +156,12 @@
 					} else {
 						if(!oldSelected){
 							layers[selected].addTo(map);
-							map.flyTo(layers[selected].getLayers()[0].getLatLngs()[0],14);
+							map.flyToBounds(layers[selected].getLayers()[0].getBounds(),14);
 							oldSelected = selected;
 						} else {
 							map.removeLayer(layers[oldSelected]);
 							layers[selected].addTo(map);
-							map.flyTo(layers[selected].getLayers()[0].getLatLngs()[0],14);
+							map.flyToBounds(layers[selected].getLayers()[0].getBounds(),14);
 							oldSelected = selected;
 						}
 					}
@@ -175,7 +175,7 @@
 							oldSelected=null;
 						}
 					
-					return map.fitBounds(realtime.getBounds(), {maxZoom: 8});
+					return map.flyToBounds(realtime.getBounds(), {maxZoom: 8});
 					
 				}
 			
@@ -416,7 +416,9 @@
 				}
 				
 				$(document).on('click','#displayed-list li', function(){
-						console.log(this.id);
+						//console.log(this);
+						$('li').removeClass('selected');
+						$(this).addClass('selected');
 						selected = this.id;
 						recent.clearLayers();
 						recentRoute(layers,5);
