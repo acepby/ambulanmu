@@ -156,12 +156,12 @@
 					} else {
 						if(!oldSelected){
 							layers[selected].addTo(map);
-							map.flyToBounds(layers[selected].getLayers()[0].getBounds(),14);
+							//map.flyToBounds(layers[selected].getLayers()[0].getBounds(),14);
 							oldSelected = selected;
 						} else {
 							map.removeLayer(layers[oldSelected]);
 							layers[selected].addTo(map);
-							map.flyToBounds(layers[selected].getLayers()[0].getBounds(),14);
+							//map.flyToBounds(layers[selected].getLayers()[0].getBounds(),14);
 							oldSelected = selected;
 						}
 					}
@@ -316,12 +316,14 @@
 				var kilo = document.getElementById("kilometer");
 				kilometer=0
 				var rawJarakHarian= [];
+				var options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',hour:'numeric', minute:'numeric', second:'numeric'};
 								
 				keys.forEach(function(route){
 						let mydist = dailyDist(tampilkan[route]);
 						var li = document.createElement("li");
 						li.id = mydist.id;
-						li.innerHTML = '['+mydist.id+'] '+ tampilkan[route].feature.properties.driver +': '+mydist.jarak+' Km';
+						li.innerHTML = '['+mydist.id+'] ' +' ['+ new Date(tampilkan[route].feature.properties.time[tampilkan[route].feature.properties.time.length - 1]).toLocaleDateString('id-ID',options) +'] <b>'
+										+ tampilkan[route].feature.properties.driver +': '+mydist.jarak+' Km</b>';
 						list.appendChild(li);
 						kilometer = Number(kilometer)+Number(mydist.jarak);
 						kilo.innerHTML ="<b>Total Jarak : "+(kilometer).toFixed(2)+" Km</b>";
@@ -420,7 +422,9 @@
 						$('li').removeClass('selected');
 						$(this).addClass('selected');
 						selected = this.id;
+						
 						recent.clearLayers();
 						recentRoute(layers,5);
+						map.flyToBounds(layers[selected].getLayers()[0].getBounds(),14);
 						
 					});
