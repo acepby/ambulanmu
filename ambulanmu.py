@@ -64,6 +64,8 @@ features = []
 #load token
 load_dotenv(find_dotenv())
 TOKEN = getenv("TOKEN")
+MYCERT = getenv("MYCERT")
+MYURL = getenv("MYURL")
 
 #set data ambulan
 abm = Ambulan()
@@ -471,8 +473,8 @@ def main():
 				listen="127.0.0.1",
 				port=5000,
 				url_path=TOKEN,
-				cert='/home/nginx-selfsigned.pem',
-				webhook_url="https://dashboard.ppm.my.id/ambulanmu/"+TOKEN)
+				cert=MYCERT,
+				webhook_url=MYURL + TOKEN)
     '''
 	updater.start_polling()
 	updater.idle()
